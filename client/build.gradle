@@ -1,0 +1,27 @@
+def jdk8Home = javaToolchains.launcherFor {
+    languageVersion = JavaLanguageVersion.of(8)
+}.get().metadata.installationPath.asFile
+
+dependencies {
+    implementation files('../libs/jna-5.18.1.jar', '../libs/flatlaf-3.5.4.jar', '../libs/gson-2.11.0.jar')
+    // 附加所需 com.sun.tools.attach，仅编译期需要（运行时由 JDK 提供）
+    compileOnly files(new File(jdk8Home, 'lib/tools.jar'))
+}
+
+processResources {
+    dependsOn ':agent:jar'
+    from(rootProject.file('agent/build/libs/mcac-agent.jar')) {
+        rename { 'mcac-agent.jar' }
+    }
+}
+
+jar {
+    archiveFileName = 'MCAC.jar'
+    manifest {
+        attributes('Main-Class': 'mcac.client.Main')
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    exclude 'module-info.class', 'META-INF/versions/**'
+}

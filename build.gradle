@@ -1,0 +1,36 @@
+allprojects {
+    group = 'mcac'
+    version = '1.0.0'
+
+    repositories {
+        // 全部依赖已放在 libs 目录，保持完全离线构建
+    }
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(8)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs += ['-Xlint:none']
+    }
+
+    tasks.withType(Jar).configureEach {
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA', 'META-INF/MANIFEST.MF'
+    }
+}
+
+task dist {
+    dependsOn ':agent:jar', ':client:jar'
+    doLast {
+        println "产物: agent/build/libs/mcac-agent.jar"
+        println "产物: client/build/libs/MCAC.jar"
+    }
+}

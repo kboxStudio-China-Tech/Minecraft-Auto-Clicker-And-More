@@ -1,0 +1,728 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MCAC · 交互演示</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#fff; --border:#e2e8f0; --text:#0f172a; --muted:#64748b;
+    --accent:#2563eb; --accent-soft:#eff6ff; --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+    --shadow:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font:14px/1.6 "Microsoft YaHei UI","Microsoft YaHei",-apple-system,"Segoe UI",sans-serif;
+  }
+  .app{max-width:860px;margin:0 auto;padding:0 16px 40px}
+  .hdr{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:18px 0 14px;
+  }
+  .brand .logo{font-size:22px;font-weight:700;letter-spacing:.4px}
+  .brand .sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .hdr-right{display:flex;align-items:center;gap:10px}
+  .chip{
+    font-size:12px;padding:5px 10px;border-radius:999px;border:1px solid var(--border);
+    background:#fff;color:var(--muted);white-space:nowrap;
+  }
+  .chip.ok{color:var(--ok);border-color:#bbf7d0;background:#f0fdf4}
+  .chip.busy{color:var(--accent);border-color:#bfdbfe;background:var(--accent-soft)}
+  .chip.stop{color:var(--bad);border-color:#fecaca;background:#fef2f2}
+  .btn{
+    font:inherit;font-size:13px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);
+    background:#fff;color:var(--text);cursor:pointer;transition:.15s;
+  }
+  .btn:hover{border-color:#cbd5e1;background:#f8fafc}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn:disabled{opacity:.6;cursor:default}
+  .tabs{display:flex;gap:6px;border-bottom:1px solid var(--border);margin-bottom:14px}
+  .tab{
+    font:inherit;font-size:13.5px;padding:9px 16px;border:0;background:none;color:var(--muted);
+    cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--text)}
+  .tab.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+  .page{display:none}
+  .page.on{display:block}
+  .card{
+    background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 16px 12px;
+    box-shadow:var(--shadow);margin-bottom:12px;
+  }
+  .card-h h2{margin:0;font-size:14.5px}
+  .card-h p{margin:4px 0 10px;font-size:12px;color:var(--muted)}
+  .row{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:7px 0;border-bottom:1px dashed #f1f5f9;
+  }
+  .row:last-of-type{border-bottom:0}
+  .row > span{font-size:13px}
+  .row b{font-size:12.5px;color:var(--accent);min-width:64px;text-align:right;font-weight:600}
+  select{
+    font:inherit;font-size:12.5px;padding:5px 8px;border:1px solid var(--border);border-radius:7px;
+    background:#fff;color:var(--text);outline:none;max-width:190px;
+  }
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:190px;height:4px;border-radius:999px;
+    background:#e2e8f0;outline:none;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;
+    background:var(--accent);border:2px solid #fff;box-shadow:0 1px 4px rgba(37,99,235,.4);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border:2px solid #fff;border-radius:50%;background:var(--accent);
+  }
+  .sw{
+    -webkit-appearance:none;appearance:none;width:38px;height:21px;border-radius:999px;
+    background:#cbd5e1;position:relative;cursor:pointer;outline:none;transition:.18s;flex:none;
+  }
+  .sw::after{
+    content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;
+    background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.25);transition:.18s;
+  }
+  .sw:checked{background:var(--accent)}
+  .sw:checked::after{transform:translateX(17px)}
+  .demo{
+    display:flex;align-items:center;gap:14px;margin:12px 0 4px;flex-wrap:wrap;
+  }
+  .target{
+    font:inherit;font-size:13px;padding:14px 22px;border-radius:10px;cursor:pointer;
+    border:1.5px dashed #bfdbfe;background:var(--accent-soft);color:var(--accent);
+    transition:.12s;user-select:none;touch-action:none;font-weight:600;
+  }
+  .target:hover{background:#e0edff}
+  .target.hit{transform:scale(.96);background:#dbeafe}
+  .metric{
+    background:#f8fafc;border:1px solid #eef2f7;border-radius:9px;padding:7px 12px;min-width:88px;
+  }
+  .metric b{display:block;font-size:16px;line-height:1.2}
+  .metric span{font-size:11px;color:var(--muted)}
+  .metrics3{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .note{font-size:11.5px;color:var(--muted);margin:10px 0 2px}
+  .note.warn{color:var(--warn)}
+  canvas{
+    display:block;width:100%;height:auto;border-radius:10px;background:#0b1220;
+    border:1px solid #0f172a;margin-top:10px;
+  }
+  canvas.light{background:#f8fafc;border-color:var(--border)}
+  .dots{
+    display:flex;gap:3px;flex-wrap:wrap;min-height:14px;margin-top:10px;
+  }
+  .dots i{
+    width:8px;height:14px;border-radius:2px;background:var(--accent);opacity:.85;
+  }
+  .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:12.5px;margin-top:4px}
+  .kv span:nth-child(odd){color:var(--muted)}
+  .foot{
+    margin-top:18px;padding-top:12px;border-top:1px solid var(--border);
+    font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+  }
+  @media (max-width:560px){
+    input[type=range]{width:130px}
+    .metric{min-width:74px;padding:6px 10px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="hdr">
+    <div class="brand">
+      <div class="logo">MCAC</div>
+      <div class="sub">Minecraft 外置助手 · 交互演示</div>
+    </div>
+    <div class="hdr-right">
+      <span id="chip" class="chip">未注入</span>
+      <button id="inject" class="btn primary">注入演示</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab on" data-page="p-clicker">连点器</button>
+    <button class="tab" data-page="p-aim">瞄准</button>
+    <button class="tab" data-page="p-aux">辅助</button>
+    <button class="tab" data-page="p-misc">其他</button>
+  </nav>
+
+  <main>
+    <section id="p-clicker" class="page on">
+      <div class="card">
+        <div class="card-h">
+          <h2>左键连点器</h2>
+          <p>按住演示按钮时以设定 CPS 连续点击；参数语义与桌面端一致</p>
+        </div>
+        <label class="row"><span>启用模块</span><input type="checkbox" id="c-on" class="sw"></label>
+        <label class="row"><span>最低 CPS</span><input type="range" id="c-min" min="1" max="30" step="1" value="8"><b id="c-min-v">8</b></label>
+        <label class="row"><span>最高 CPS</span><input type="range" id="c-max" min="1" max="30" step="1" value="12"><b id="c-max-v">12</b></label>
+        <label class="row"><span>点击曲线</span>
+          <select id="c-curve">
+            <option value="uniform">均匀分布</option>
+            <option value="gauss">高斯分布</option>
+            <option value="beta">偏态分布</option>
+          </select>
+        </label>
+        <label class="row"><span>仅在进入世界后生效</span><input type="checkbox" id="c-world" class="sw" checked></label>
+        <label class="row"><span>仅在手持方块或剑时生效</span><input type="checkbox" id="c-item" class="sw"></label>
+        <label class="row"><span>模拟手持</span>
+          <select id="c-held">
+            <option value="none">空手 / 其他</option>
+            <option value="block">方块</option>
+            <option value="sword">剑</option>
+          </select>
+        </label>
+        <div class="demo">
+          <button id="c-target" class="target">按住我测试</button>
+          <div class="metric"><b id="c-count">0</b><span>累计点击</span></div>
+          <div class="metric"><b id="c-cps">0.0</b><span>实时 CPS</span></div>
+        </div>
+        <p class="note" id="c-note">未注入：先点右上角“注入演示”，否则“仅在世界内生效”会拦住。</p>
+      </div>
+    </section>
+
+    <section id="p-aim" class="page">
+      <div class="card">
+        <div class="card-h">
+          <h2>瞄准辅助</h2>
+          <p>相机按最大角速度转向目标，观察水平 / 垂直误差如何收敛</p>
+        </div>
+        <label class="row"><span>启用模块</span><input type="checkbox" id="a-on" class="sw" checked></label>
+        <label class="row"><span>最大速度</span><input type="range" id="a-speed" min="30" max="3000" step="10" value="600"><b id="a-speed-v">600 °/s</b></label>
+        <label class="row"><span>精确度</span><input type="range" id="a-tol" min="0.1" max="5" step="0.1" value="1.5"><b id="a-tol-v">1.5 °</b></label>
+        <label class="row"><span>复现旧版 y 轴反号 bug</span><input type="checkbox" id="a-bug" class="sw"></label>
+        <canvas id="aim-c" width="640" height="330"></canvas>
+        <div class="metrics3">
+          <div class="metric"><b id="a-yaw">0.0°</b><span>水平误差</span></div>
+          <div class="metric"><b id="a-pitch">0.0°</b><span>垂直误差</span></div>
+          <div class="metric"><b id="a-state">未锁定</b><span>状态</span></div>
+        </div>
+        <p class="note">1.8 的手感是“鼠标向下 → pitch 增大 → 视点下移”。旧的符号错误会让垂直误差单调发散，准星一路顶到 ±90°，怎么都瞄不到人。</p>
+      </div>
+    </section>
+
+    <section id="p-aux" class="page">
+      <div class="card">
+        <div class="card-h">
+          <h2>鹰眼（安全行走 / 蹲搭）</h2>
+          <p>脚下实地、运动方向前方 N 格悬空时自动蹲下，离开边缘立即站起</p>
+        </div>
+        <label class="row"><span>启用鹰眼</span><input type="checkbox" id="e-on" class="sw" checked></label>
+        <label class="row"><span>下蹲触发距离</span><input type="range" id="e-dist" min="0.1" max="1.5" step="0.05" value="0.56"><b id="e-dist-v">0.56 格</b></label>
+        <canvas id="eagle-c" width="640" height="180"></canvas>
+        <div class="metrics3">
+          <div class="metric"><b id="e-point">—</b><span>探测点</span></div>
+          <div class="metric"><b id="e-want">实地</b><span>前方</span></div>
+          <div class="metric"><b id="e-sneak">未下蹲</b><span>Shift</span></div>
+        </div>
+        <p class="note">距离越大越早蹲；0.56 格正好是原版半格，只在真正走到边缘时才触发。</p>
+      </div>
+
+      <div class="card">
+        <div class="card-h">
+          <h2>回溯（Backtrack）</h2>
+          <p>攻击时暂停处理服务端入站包，结束后按策略补发</p>
+        </div>
+        <label class="row"><span>启用回溯</span><input type="checkbox" id="b-on" class="sw" checked></label>
+        <label class="row"><span>最长回溯时间</span><input type="range" id="b-max" min="50" max="5000" step="50" value="300"><b id="b-max-v">300 ms</b></label>
+        <label class="row"><span>持续缓慢释放</span><input type="checkbox" id="b-slow" class="sw" checked></label>
+        <div class="demo">
+          <button id="b-attack" class="target">按住 = 攻击</button>
+          <div class="metric"><b id="b-q">0</b><span>缓存包</span></div>
+          <div class="metric"><b id="b-est">0 ms</b><span>估计延迟</span></div>
+        </div>
+        <div class="dots" id="b-dots"></div>
+        <p class="note" id="b-note">缓慢释放以约 30 包/秒补发，位置不会瞬间回拉。</p>
+      </div>
+    </section>
+
+    <section id="p-misc" class="page">
+      <div class="card">
+        <div class="card-h"><h2>运行状态</h2><p>这里展示的是演示状态，不是真实进程</p></div>
+        <div class="kv">
+          <span>注入状态</span><b id="m-inject">未注入</b>
+          <span>世界状态</span><b id="m-world">未进入世界</b>
+          <span>注入方式</span><b>Java Agent · 按 PID 附加</b>
+          <span>探针协议</span><b>TCP 127.0.0.1 · 动态端口 · v5</b>
+          <span>支持版本</span><b>1.8.9 ~ 1.21.8</b>
+        </div>
+        <div class="demo">
+          <button id="panic" class="btn">紧急停止（关闭全部模块）</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h2>关于这份演示</h2><p>纯前端模拟，用于说明参数与手感</p></div>
+        <p class="note">
+          页面不会读取你的游戏进程，也不会注入任何代码。真实程序通过 Java Agent 附加到 Minecraft，
+          按 PID 注入、动态端口通信，并在检测到玩家 tick 推进后才允许各模块生效。
+          源码、构建方式与 MIT 许可见仓库根目录 README。
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>MCAC · 仅用于学习研究与自建服务器 · MIT License</span>
+    <span>纯前端演示 · 无注入 / 无点击劫持</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var clamp = function (v, a, b) { return Math.max(a, Math.min(b, v)); };
+
+  /* ---------------- 注入演示 ---------------- */
+  var injected = false;
+  var chip = $("#chip");
+  var injectBtn = $("#inject");
+
+  injectBtn.addEventListener("click", function () {
+    if (injected) return;
+    injectBtn.disabled = true;
+    chip.className = "chip busy";
+    chip.textContent = "正在注入…";
+    setTimeout(function () {
+      injected = true;
+      injectBtn.disabled = false;
+      injectBtn.textContent = "重新注入";
+      chip.className = "chip ok";
+      chip.textContent = "世界中 · 实体 1 · 正常";
+      $("#m-inject").textContent = "已注入（演示）";
+      $("#m-world").textContent = "世界中 · 实体 1 · 正常";
+    }, 900);
+  });
+
+  /* ---------------- 标签页 ---------------- */
+  var tabs = document.querySelectorAll(".tab");
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener("click", function () {
+      var target = this.getAttribute("data-page");
+      for (var j = 0; j < tabs.length; j++) tabs[j].classList.remove("on");
+      this.classList.add("on");
+      var pages = document.querySelectorAll(".page");
+      for (var k = 0; k < pages.length; k++) {
+        pages[k].classList.toggle("on", pages[k].id === target);
+      }
+    });
+  }
+
+  /* ---------------- 连点器 ---------------- */
+  var clicker = {
+    on: false, min: 8, max: 12, curve: "uniform",
+    world: true, item: false, held: "none",
+    count: 0, next: 0, holding: false, stamps: []
+  };
+
+  $("#c-on").addEventListener("change", function () { clicker.on = this.checked; });
+  $("#c-world").addEventListener("change", function () { clicker.world = this.checked; });
+  $("#c-item").addEventListener("change", function () { clicker.item = this.checked; });
+  $("#c-curve").addEventListener("change", function () { clicker.curve = this.value; });
+  $("#c-held").addEventListener("change", function () { clicker.held = this.value; });
+  $("#c-min").addEventListener("input", function () {
+    clicker.min = +this.value;
+    $("#c-min-v").textContent = this.value;
+  });
+  $("#c-max").addEventListener("input", function () {
+    clicker.max = +this.value;
+    $("#c-max-v").textContent = this.value;
+  });
+
+  var cTarget = $("#c-target");
+
+  function gauss() {
+    var u1 = Math.max(1e-9, Math.random());
+    var u2 = Math.random();
+    return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  }
+
+  function sampleCps() {
+    var a = Math.min(clicker.min, clicker.max);
+    var b = Math.max(clicker.min, clicker.max);
+    var v;
+    if (clicker.curve === "gauss") {
+      var m = (a + b) / 2;
+      var sd = Math.max(0.05, (b - a) / 6);
+      v = m + gauss() * sd;
+    } else if (clicker.curve === "beta") {
+      v = a + (b - a) * Math.pow(Math.random(), 1.7);
+    } else {
+      v = a + (b - a) * Math.random();
+    }
+    return clamp(v, a, b);
+  }
+
+  function clickerAllowed() {
+    return injected && clicker.on && clicker.holding
+      && (!clicker.world || injected)
+      && (!clicker.item || clicker.held === "block" || clicker.held === "sword");
+  }
+
+  function pulseTarget() {
+    cTarget.classList.add("hit");
+    setTimeout(function () { cTarget.classList.remove("hit"); }, 70);
+  }
+
+  cTarget.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    clicker.holding = true;
+  });
+  window.addEventListener("pointerup", function () { clicker.holding = false; });
+  window.addEventListener("blur", function () { clicker.holding = false; });
+
+  setInterval(function () {
+    var now = performance.now();
+    if (!clickerAllowed()) {
+      clicker.next = 0;
+      return;
+    }
+    if (clicker.next === 0) clicker.next = now;
+    if (now >= clicker.next) {
+      clicker.count++;
+      clicker.stamps.push(now);
+      pulseTarget();
+      clicker.next = now + 1000 / sampleCps();
+    }
+  }, 8);
+
+  function syncClickerUi() {
+    var now = performance.now();
+    while (clicker.stamps.length && now - clicker.stamps[0] > 1000) clicker.stamps.shift();
+    $("#c-count").textContent = String(clicker.count);
+    $("#c-cps").textContent = clicker.stamps.length.toFixed(1);
+    var note = $("#c-note");
+    note.className = "note";
+    if (!injected) {
+      note.textContent = "未注入：先点右上角“注入演示”，否则“仅在世界内生效”会拦住。";
+      note.classList.add("warn");
+    } else if (!clicker.on) {
+      note.textContent = "模块未启用：打开“启用模块”，再按住测试按钮。";
+    } else if (clicker.item && clicker.held !== "block" && clicker.held !== "sword") {
+      note.textContent = "手持过滤生效：当前模拟“空手 / 其他”，连点被拦截。切换成方块或剑即可点击。";
+      note.classList.add("warn");
+    } else if (!clicker.holding) {
+      note.textContent = "按住“按住我测试”即可开始，CPS 会在设定区间内按所选曲线浮动。";
+    } else {
+      note.textContent = "连点中… 松开即停。";
+    }
+  }
+
+  /* ---------------- 瞄准 ---------------- */
+  var aimCanvas = $("#aim-c");
+  var actx = aimCanvas.getContext("2d");
+  var AIM_W = aimCanvas.width;
+  var AIM_H = aimCanvas.height;
+
+  var aim = { on: true, speed: 600, tol: 1.5, bug: false, yaw: -28, pitch: -14, t: 0, last: 0 };
+
+  $("#a-on").addEventListener("change", function () { aim.on = this.checked; });
+  $("#a-bug").addEventListener("change", function () {
+    aim.bug = this.checked;
+    if (!aim.bug) { aim.yaw = -28; aim.pitch = -14; }
+  });
+  $("#a-speed").addEventListener("input", function () {
+    aim.speed = +this.value;
+    $("#a-speed-v").textContent = this.value + " °/s";
+  });
+  $("#a-tol").addEventListener("input", function () {
+    aim.tol = +this.value;
+    $("#a-tol-v").textContent = (+this.value).toFixed(1) + " °";
+  });
+
+  function wrap180(a) {
+    while (a > 180) a -= 360;
+    while (a < -180) a += 360;
+    return a;
+  }
+
+  function drawAim(ty, tp) {
+    var W = AIM_W, H = AIM_H;
+    var g = actx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#101a2e");
+    g.addColorStop(1, "#0b1220");
+    actx.fillStyle = g;
+    actx.fillRect(0, 0, W, H);
+
+    actx.strokeStyle = "rgba(148,163,184,.14)";
+    actx.lineWidth = 1;
+    for (var x = 0; x <= W; x += 40) {
+      actx.beginPath(); actx.moveTo(x, 0); actx.lineTo(x, H); actx.stroke();
+    }
+    for (var y = 0; y <= H; y += 40) {
+      actx.beginPath(); actx.moveTo(0, y); actx.lineTo(W, y); actx.stroke();
+    }
+
+    actx.strokeStyle = "rgba(96,165,250,.35)";
+    actx.beginPath();
+    actx.moveTo(0, H / 2); actx.lineTo(W, H / 2);
+    actx.stroke();
+
+    var sx = W / 2 + (ty - aim.yaw) * 6;
+    var sy = H / 2 + (tp - aim.pitch) * 6;
+    sx = clamp(sx, 22, W - 22);
+    sy = clamp(sy, 22, H - 22);
+
+    var locked = Math.abs(ty - aim.yaw) <= aim.tol && Math.abs(tp - aim.pitch) <= aim.tol;
+    var color = locked ? "#22c55e" : "#f87171";
+
+    actx.beginPath();
+    actx.arc(sx, sy, 16, 0, Math.PI * 2);
+    actx.fillStyle = "rgba(248,113,113,.16)";
+    actx.fill();
+    actx.beginPath();
+    actx.arc(sx, sy, 7, 0, Math.PI * 2);
+    actx.fillStyle = color;
+    actx.fill();
+
+    actx.strokeStyle = color;
+    actx.lineWidth = 1.6;
+    actx.beginPath(); actx.arc(W / 2, H / 2, 12, 0, Math.PI * 2); actx.stroke();
+    actx.beginPath();
+    actx.moveTo(W / 2 - 22, H / 2); actx.lineTo(W / 2 - 6, H / 2);
+    actx.moveTo(W / 2 + 6, H / 2); actx.lineTo(W / 2 + 22, H / 2);
+    actx.moveTo(W / 2, H / 2 - 22); actx.lineTo(W / 2, H / 2 - 6);
+    actx.moveTo(W / 2, H / 2 + 6); actx.lineTo(W / 2, H / 2 + 22);
+    actx.stroke();
+
+    actx.fillStyle = "rgba(226,232,240,.65)";
+    actx.font = "12px 'Microsoft YaHei UI', sans-serif";
+    actx.fillText(locked ? "已锁定" : "追踪中", 14, 22);
+    actx.fillStyle = "rgba(148,163,184,.75)";
+    actx.fillText("视野 · 目标以红色标记，准星固定居中", 14, H - 14);
+  }
+
+  function aimFrame(now) {
+    var dt = aim.last ? Math.min(0.05, (now - aim.last) / 1000) : 0.016;
+    aim.last = now;
+    aim.t += dt;
+
+    var ty = 26 * Math.sin(aim.t * 0.8);
+    var tp = 22 * Math.sin(aim.t * 0.55 + 1.1) - 4;
+
+    if (aim.on) {
+      var errY = wrap180(ty - aim.yaw);
+      var stepY = Math.min(Math.abs(errY), aim.speed * dt) * Math.sign(errY);
+      aim.yaw += stepY * 0.85;
+
+      var errP = tp - aim.pitch;
+      var stepP = Math.min(Math.abs(errP), aim.speed * dt) * Math.sign(errP);
+      aim.pitch += (aim.bug ? -stepP : stepP) * 0.85;
+    }
+
+    aim.yaw = clamp(aim.yaw, -80, 80);
+    aim.pitch = clamp(aim.pitch, -80, 80);
+
+    drawAim(ty, tp);
+
+    var eY = wrap180(ty - aim.yaw);
+    var eP = tp - aim.pitch;
+    var locked = Math.abs(eY) <= aim.tol && Math.abs(eP) <= aim.tol;
+    $("#a-yaw").textContent = eY.toFixed(1) + "°";
+    $("#a-pitch").textContent = eP.toFixed(1) + "°";
+    var st = $("#a-state");
+    st.textContent = !aim.on ? "未启用" : (locked ? "已锁定" : "追踪中");
+    st.style.color = locked ? "var(--ok)" : (aim.bug ? "var(--bad)" : "var(--text)");
+
+    requestAnimationFrame(aimFrame);
+  }
+
+  /* ---------------- 鹰眼 ---------------- */
+  var eagleCanvas = $("#eagle-c");
+  var ectx = eagleCanvas.getContext("2d");
+  var EW = eagleCanvas.width;
+  var EH = eagleCanvas.height;
+
+  var eagle = { on: true, dist: 0.56, x: 2.0, dir: 1, last: 0 };
+
+  $("#e-on").addEventListener("change", function () { eagle.on = this.checked; });
+  $("#e-dist").addEventListener("input", function () {
+    eagle.dist = +this.value;
+    $("#e-dist-v").textContent = (+this.value).toFixed(2) + " 格";
+  });
+
+  var BLOCKS = 10;
+  var PAD_X = 20;
+  var BLOCK_W = (EW - PAD_X * 2) / BLOCKS;
+  var GROUND_Y = 128;
+
+  function drawEagle() {
+    ectx.fillStyle = "#f8fafc";
+    ectx.fillRect(0, 0, EW, EH);
+
+    for (var i = 0; i < BLOCKS; i++) {
+      var bx = PAD_X + i * BLOCK_W;
+      ectx.fillStyle = i % 2 === 0 ? "#e2e8f0" : "#eef2f7";
+      ectx.fillRect(bx, GROUND_Y, BLOCK_W - 1, 34);
+      ectx.strokeStyle = "#cbd5e1";
+      ectx.strokeRect(bx + .5, GROUND_Y + .5, BLOCK_W - 2, 33);
+    }
+    ectx.fillStyle = "#94a3b8";
+    ectx.font = "11px 'Microsoft YaHei UI', sans-serif";
+    ectx.fillText("方块平台", PAD_X, GROUND_Y + 54);
+
+    var px = eagle.x + eagle.dir * eagle.dist;
+    var aheadAir = px > BLOCKS;
+    var want = eagle.on && aheadAir;
+
+    var pxScreen = PAD_X + eagle.x * BLOCK_W;
+    var detect = PAD_X + px * BLOCK_W;
+
+    ectx.strokeStyle = aheadAir ? "#dc2626" : "#16a34a";
+    ectx.setLineDash([4, 4]);
+    ectx.beginPath();
+    ectx.moveTo(detect, GROUND_Y - 46);
+    ectx.lineTo(detect, GROUND_Y);
+    ectx.stroke();
+    ectx.setLineDash([]);
+    ectx.beginPath();
+    ectx.arc(detect, GROUND_Y - 46, 4, 0, Math.PI * 2);
+    ectx.fillStyle = aheadAir ? "#dc2626" : "#16a34a";
+    ectx.fill();
+
+    var h = want ? 30 : 42;
+    var top = GROUND_Y - h;
+    ectx.fillStyle = want ? "#2563eb" : "#64748b";
+    ectx.fillRect(pxScreen - 11, top, 22, h);
+    ectx.fillStyle = "#fff";
+    ectx.fillRect(pxScreen - 6, top + 7, 4, 4);
+    ectx.fillRect(pxScreen + 2, top + 7, 4, 4);
+
+    if (eagle.dir > 0) {
+      ectx.fillStyle = "#0f172a";
+      ectx.fillText("前进 →", pxScreen + 16, top + 14);
+    } else {
+      ectx.fillText("← 前进", pxScreen - 58, top + 14);
+    }
+
+    if (want) {
+      ectx.fillStyle = "rgba(37,99,235,.12)";
+      ectx.fillRect(pxScreen - 40, top - 34, 80, 22);
+      ectx.fillStyle = "#2563eb";
+      ectx.fillText("SHIFT", pxScreen - 20, top - 19);
+    }
+
+    $("#e-point").textContent = px.toFixed(2) + " 格";
+    $("#e-want").textContent = !eagle.on ? "已停用" : (aheadAir ? "悬空" : "实地");
+    $("#e-want").style.color = aheadAir ? "var(--bad)" : "var(--ok)";
+    var sk = $("#e-sneak");
+    sk.textContent = want ? "蹲搭中" : "未下蹲";
+    sk.style.color = want ? "var(--accent)" : "var(--text)";
+  }
+
+  function eagleFrame(now) {
+    var dt = eagle.last ? Math.min(0.05, (now - eagle.last) / 1000) : 0.016;
+    eagle.last = now;
+    eagle.x += eagle.dir * 1.7 * dt;
+    if (eagle.x > 8.95) { eagle.x = 8.95; eagle.dir = -1; }
+    if (eagle.x < 0.7) { eagle.x = 0.7; eagle.dir = 1; }
+    drawEagle();
+    requestAnimationFrame(eagleFrame);
+  }
+
+  /* ---------------- 回溯 ---------------- */
+  var bt = { on: true, max: 300, slow: true, attack: false, q: 0, drain: 0, flash: 0, flashN: 0, last: 0 };
+
+  $("#b-on").addEventListener("change", function () {
+    bt.on = this.checked;
+    if (!bt.on) { bt.q = 0; bt.drain = 0; }
+  });
+  $("#b-max").addEventListener("input", function () {
+    bt.max = +this.value;
+    $("#b-max-v").textContent = this.value + " ms";
+  });
+  $("#b-slow").addEventListener("change", function () { bt.slow = this.checked; });
+
+  var btBtn = $("#b-attack");
+  btBtn.addEventListener("pointerdown", function (e) {
+    e.preventDefault();
+    if (bt.on) bt.attack = true;
+  });
+  window.addEventListener("pointerup", function () { bt.attack = false; });
+  window.addEventListener("blur", function () { bt.attack = false; });
+
+  setInterval(function () {
+    if (!bt.attack || !bt.on) return;
+    var cap = Math.max(1, Math.round(bt.max * 0.02));
+    if (bt.q < cap) bt.q++;
+  }, 50);
+
+  function btFrame(now) {
+    var dt = bt.last ? Math.min(0.08, (now - bt.last) / 1000) : 0.016;
+    bt.last = now;
+
+    if (!bt.attack && bt.q > 0) {
+      if (bt.slow) {
+        bt.drain += dt * 30;
+        while (bt.drain >= 1 && bt.q > 0) {
+          bt.q--;
+          bt.drain -= 1;
+        }
+      } else {
+        bt.flashN = bt.q;
+        bt.flash = now + 1400;
+        bt.q = 0;
+        bt.drain = 0;
+      }
+    }
+
+    var dots = $("#b-dots");
+    var show = Math.min(bt.q, 80);
+    if (dots.childElementCount !== show) {
+      while (dots.childElementCount > show) dots.removeChild(dots.lastChild);
+      while (dots.childElementCount < show) dots.appendChild(document.createElement("i"));
+    }
+
+    $("#b-q").textContent = String(bt.q);
+    $("#b-est").textContent = Math.round(bt.q * 50) + " ms";
+
+    var note = $("#b-note");
+    note.className = "note";
+    if (!bt.on) {
+      note.textContent = "回溯已关闭，缓存包直接放行。";
+    } else if (bt.flash > now) {
+      note.textContent = "一次性回放 " + bt.flashN + " 个包 —— 视角/位置会突然回拉，这就是关闭缓慢释放的代价。";
+      note.classList.add("warn");
+    } else if (bt.attack) {
+      note.textContent = "攻击中：缓存上限约 " + Math.max(1, Math.round(bt.max * 0.02)) + " 包（约 " + bt.max + "ms），达到后停止缓存。";
+    } else if (bt.q > 0) {
+      note.textContent = bt.slow
+        ? "持续缓慢释放中：约 30 包/秒逐批补发，位置平滑追上服务端。"
+        : "松开攻击：立即一次性回放。";
+    } else {
+      note.textContent = bt.slow
+        ? "缓慢释放以约 30 包/秒补发，位置不会瞬间回拉。"
+        : "当前为一次性回放模式，松开攻击时会把缓存瞬间全部补发。";
+    }
+
+    requestAnimationFrame(btFrame);
+  }
+
+  /* ---------------- 紧急停止 ---------------- */
+  $("#panic").addEventListener("click", function () {
+    clicker.on = false; $("#c-on").checked = false;
+    aim.on = false; $("#a-on").checked = false;
+    eagle.on = false; $("#e-on").checked = false;
+    bt.on = false; $("#b-on").checked = false;
+    bt.q = 0; bt.attack = false;
+    clicker.holding = false;
+    chip.className = "chip stop";
+    chip.textContent = "已全部停止";
+    $("#m-inject").textContent = "已停止（演示）";
+    $("#m-world").textContent = "已停止";
+  });
+
+  /* ---------------- 启动 ---------------- */
+  setInterval(syncClickerUi, 80);
+  requestAnimationFrame(aimFrame);
+  requestAnimationFrame(eagleFrame);
+  requestAnimationFrame(btFrame);
+  drawEagle();
+  drawAim(0, 0);
+  syncClickerUi();
+})();
+</script>
+</body>
+</html>
