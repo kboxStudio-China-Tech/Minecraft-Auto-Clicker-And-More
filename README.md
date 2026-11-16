@@ -40,7 +40,9 @@ MCAC（Minecraft Auto Clicker & More）是一个**外置**的 Minecraft 助手�
 
 ## 在线试玩
 
-[`docs/index.html`](docs/index.html) 是一个**纯前端交互演示**，和桌面端共用同一套参数语义：
+**打开演示：<https://kboxstudio-china-tech.github.io/Minecraft-Auto-Clicker-And-More/>**
+
+页面源码在 [`docs/index.html`](docs/index.html)，是一个**纯前端交互演示**，和桌面端共用同一套参数语义：
 
 - 连点器：换 CPS 曲线、打开“手持过滤”，看它如何被空手拦住；
 - 瞄准：目标在水平和垂直方向游走，还能一键复现“旧版 y 轴反号”的离谱手感；
@@ -49,8 +51,8 @@ MCAC（Minecraft Auto Clicker & More）是一个**外置**的 Minecraft 助手�
 
 它不会注入任何东西，也不会点击任何东西 —— 只是把这套交互讲清楚。
 
-开启在线地址：仓库 `Settings → Pages`，Source 选 `Deploy from a branch`，分支 `main`、目录 `/docs`，保存后访问
-`https://<你的用户名>.github.io/<仓库名>/`。
+> 如果上面的地址暂时打不开，说明 GitHub Pages 还没开启：仓库 `Settings → Pages`，
+> Source 选 `Deploy from a branch`，分支 `main`、目录 `/docs`，保存后几十秒即可访问。
 
 ## 快速开始
 
